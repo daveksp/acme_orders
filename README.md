@@ -7,12 +7,27 @@ ABOUT THIS PROKECT:
     - This project uses celery and RabbitMQ as Broker. I've setup a rabbitMq docker container in 142.4.215.94, to make easy for you to test the project without further configuration.
 
     - As a Flask Pattern, the config file was described as different types of Class (Development, Testing and Production). They are placed in config/general_config.py 
+    
+    - I made small changes in the endpoints for providing additional information about the versions and for the case we want to run more than one instance with different versions, so now we have:
+    
+    - /acme_orders/api/v1/orders
+    - /acme_orders/api/v1/orders/<order_id>
+    - /acme_orders/api/v1/orders/import
+    
+    - I have also add other helpful endpoints, such as:
+        - /acme_orders
+            - gives you an html page with upload form.
+        
+        - /acme_orders/api/v1/orders/import/status
+            - gives you the upload status.
 
 RUNNING:
 
     - requirements.txt is placed in acme_orders/resources/
     
     - to start up the project, execute this command in the root directory: resources/script/wsgi_start.sh 142.4.215.94 Production
+    
+    - The project uses the port 8089
 
 NEXT STEPS:
 

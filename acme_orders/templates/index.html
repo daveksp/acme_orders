@@ -1,0 +1,20 @@
+<!doctype html>
+<html>
+    <title>Acme Wines</title>
+    <head>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+        <script src="{{ url_for('static', filename='assets/js/script.js')}}"></script>
+    </head>
+
+    <body>
+        <div class=page>
+            <h1>Acme Wines - Import Orders Module</h1>
+            
+            <div class=metanav>
+                <input type="file" name="spreedsheet" id="spreedsheet"><br/>
+                <button type="button" class="import_ss">Upload Orders</button>
+            </div>
+            <div id="progress"></div>
+        </div>
+    </body>
+</html>

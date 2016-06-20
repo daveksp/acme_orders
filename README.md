@@ -16,11 +16,13 @@ ABOUT THIS PROKECT:
     
     - I have also add other helpful endpoints, such as:
         - /acme_orders
-            - gives you an html page with upload form.
+            - gives you a html page with the upload form.
         
         - /acme_orders/api/v1/orders/import/status
             - gives you the upload status.
-
+    
+    - Case we have two records with same order_id, only the first one is going to be persisted to the database. As a possible solution, we could remove the order_id and let SQLAlchemy generate a new order_id value for this record.
+    
 RUNNING:
 
     - requirements.txt is placed in acme_orders/resources/
@@ -42,3 +44,5 @@ NEXT STEPS:
     - The import process is saving the csv file into /tmp and passing it's path to celery task. It's not a good think if we want to scale to more celery nodes in different machines. In this case, it'd be a good idea to upload the file to somewhere as an Amazon S3 bucket.
 
     - Apply a Basic Auth. This way we encode user and password with base64 and send it in the header, providing a simple protection to our api.  
+    
+    - Create a Continuous Integration Job for this project and automate the deploy process through tools such as Docker, ansible and/or puppet.

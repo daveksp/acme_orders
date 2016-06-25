@@ -11,7 +11,6 @@ import unittest
 from mock import patch, MagicMock
 from werkzeug.datastructures import FileStorage
 
-os.environ['ACME_ENV'] = 'Testing'
 os.environ['CELERY_RESULT_BACKEND'] = 'amqp://guest:guest@142.4.215.94:5672//'
 os.environ['CELERY_BROKER_URL'] = 'amqp://guest:guest@142.4.215.94:5672//'
 

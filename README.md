@@ -2,7 +2,7 @@
 <img src='https://travis-ci.org/daveksp/acme_orders.svg?branch=master' alt='Building Status' />
 <a href='https://coveralls.io/github/daveksp/acme_orders?branch=master'><img src='https://coveralls.io/repos/github/daveksp/acme_orders/badge.svg?branch=master' alt='Coverage Status' /></a>
 
-ABOUT THIS PROKECT:
+ABOUT THIS PROJECT:
 
     - This project uses celery and RabbitMQ as Broker. I've setup a rabbitMq docker container in 142.4.215.94, to make easy for you to test the project without further configuration.
 

@@ -7,124 +7,112 @@ import json
 import os
 import uuid
 
-from flask import jsonify, request, render_template, url_for
+from flask import jsonify, make_response, request, render_template, url_for
+from flask_restful.inputs import boolean
+from flask.ext.restful import marshal ,reqparse, Resource
+from werkzeug.datastructures import FileStorage
 
-from acme_orders import app, celery, service
+from acme_orders import app, api, celery
+from acme_orders.services import importer, order  
 from acme_orders.logger.log import create_logger, log
 from acme_orders.models import get_session, Order
+from acme_orders.util import create_base_response
 
 logger = create_logger(__name__)
 
+class OrderAPI(Resource):
 
-def create_response_base(uuid_value):
-    if uuid_value is None:
-        uuid_value = uuid.uuid4()
-    return dict(result=[], status_code=500, uuid=uuid_value, message='')
+    def __init__(self):
+        limit_help_msg = 'limit must be a number'
+        offset_help_msg = 'offset must be a number'
+        orderid_help_msg = 'order_id must be a number'   #test this
+        valid_help_msg = 'valid must be a bool value'
+        state_help_msg = 'state must be a string'
 
-
-
-@app.route('/acme_orders/api/v1/orders', methods=['GET'])
-def list_imported_orders():
-    limit = request.args.get('limit')
-    offset = request.args.get('offset')
-
-    response = create_response_base(request.args.get('uuid'))
-    log(logger, response['uuid'], 'starting request', params=request.args)
-    level = 'info'
-    response['status_code'] = 200
-    desired_fields = ['id', 'valid', 'name']
-
-    if limit is not None and not limit.isdigit():
-        response['message'] = 'limit must be a number! '
-        response['status_code'] = 402
-    if offset is not None and not offset.isdigit():
-        response['message'] += 'offset must be a number!'
-        response['status_code'] = 402
-    
-    if response['status_code'] == 200:
-        session = get_session()
-        query = session.query(Order)
-        query = query.limit(limit) if limit else query
-        query = query.offset(offset) if offset else query
-
-        orders = query.all()
-
-        response['result'] = ([
-            {field: getattr(order, field) for field in desired_fields} 
-                for order in orders
-        ])
-
-    log(logger, response['uuid'], response, level=level)
-    return jsonify(response), response['status_code']
-
-
-@app.route('/acme_orders/api/v1/orders/<order_id>', methods=['GET'])
-def get_order(order_id):
-    response = create_response_base(request.args.get('uuid'))
-    log(logger, response['uuid'], 'starting request', params=request.args)
-    level = 'info'
-    response['status_code'] = 200
-    desired_fields = [
-        'id', 'valid', 'name', 'email', 'state', 
-        'zipcode', 'errors', 'birthday'
-    ]
-
-    session = get_session()
-    order = session.query(Order).filter(Order.id==order_id).first()
-
-    imported_orders = {field: getattr(order, field) for field in desired_fields} 
-    imported_orders['birthday'] = imported_orders['birthday'].strftime("%B %d, %Y") 
-
-    response['result'] = imported_orders
-    log(logger, response['uuid'], response, level=level)
-    return jsonify(response), response['status_code']
-
-
-@app.route('/acme_orders/api/v1/orders/import', methods=['PUT'])
-def upload_csv():
-    csv_file = request.files.get('csv_file')
-    
-    response = create_response_base(request.args.get('uuid'))
-    log(logger, response['uuid'], 'starting request', params=request.args)
-    level = 'info'
-    response['status_code'] = 200
-
-    tmp_file_name = '/tmp/{}.csv'.format(response['uuid']) 
-    csv_file.save(tmp_file_name)
-
-    task = service.import_cvs_orders.apply_async(args=[tmp_file_name, response['uuid']])
-    response['message'] = 'starting importing proccess'
+        self.reqparse = reqparse.RequestParser()
+        self.reqparse.add_argument('limit', type=int, required=False, location='args', help=limit_help_msg)
+        self.reqparse.add_argument('offset', type=int, required=False, location='args', help=offset_help_msg)
+        self.reqparse.add_argument('uuid', type=str, required=False, location='args')
+        self.reqparse.add_argument('valid', type=boolean, required=False, location='args', help=valid_help_msg)
+        self.reqparse.add_argument('state', type=str, required=False, location='args', help=state_help_msg)
         
-    log(logger, response['uuid'], response, level=level)
-    return jsonify(response), response['status_code'], {
-        'location': url_for('get_status') + '?task_id=' + task.id}
-
-
-@app.route('/acme_orders/api/v1/orders/import/status', methods=['GET'])
-def get_status():
-    response = create_response_base(request.args.get('uuid')) 
-    log(logger, response['uuid'], 'starting request', params=request.args)
-    level = 'info'
-    response['status_code'] = 200
-
-    task_id = request.args.get('task_id')
-    task = service.import_cvs_orders.AsyncResult(task_id)
-    if task.info is not None:
-        if task.status == 'SUCCESS':
-            os.remove(task.info.get('file_name'))
-
-        result = dict(status=task.state, current=task.info.get('current'),
-                      message=task.info.get('msg'))
-    
-    else:
-        result = dict(status='PENDING', current=0,
-                      message='starting importing proccess')
+        # add to check only for valid orders
+        super(OrderAPI, self).__init__()
 
     
+    def get(self, order_id=None):
+        args = self.reqparse.parse_args()
+        response = create_base_response()
+        desired_fields = ['id', 'valid', 'name']
+        allowed_filters = ['valid', 'state']
+        
+        if not order_id:
+            filters = {}
+            limit = args['limit']
+            offset = args['offset']
+            
+            filters = ({_filter: args[_filter] 
+                for _filter in allowed_filters if args[_filter] is not None})
 
-    response['result'] = result
-    log(logger, response['uuid'], response, level=level)
-    return jsonify(response), response['status_code']
+            response['result'] = order.get_order_list(limit=limit, offset=offset, filters=filters)
+        else:
+            response['result'] = order.get_order_by_id(order_id)
+
+        log(logger, response['uuid'], response)
+        return jsonify(response)
+
+
+
+class ImporterAPI(Resource):
+
+    def __init__(self):
+        csv_file_help_msg = 'a csv file is required'
+
+        self.reqparse = reqparse.RequestParser()
+        # add unit test to cover a no file case.
+        if request.method == 'PUT':
+            self.reqparse.add_argument('csv_file', type=FileStorage, required=True, location='files', help=csv_file_help_msg)
+
+        self.reqparse.add_argument('uuid', type=str, required=False, location='args')
+
+        super(ImporterAPI, self).__init__()
+
+    
+    def put(self):
+        args = self.reqparse.parse_args()
+        response = create_base_response()
+        csv_file = args['csv_file']
+
+        tmp_file_name = '/tmp/{}.csv'.format(response['uuid']) 
+        csv_file.save(tmp_file_name)
+
+        task = importer.import_cvs_orders.apply_async(args=[tmp_file_name, response['uuid']])
+        response['message'] = 'starting importing proccess'
+        
+        log(logger, response['uuid'], response)
+        return make_response(jsonify(response), response['status_code'], {
+            'location': url_for('importer_status', task_id=task.id)})
+
+
+    def get(self, task_id):
+        args = self.reqparse.parse_args()
+        response = create_base_response()
+        task = importer.import_cvs_orders.AsyncResult(task_id)
+        if task.info is not None:
+            if task.status == 'SUCCESS':
+                os.remove(task.info.get('file_name'))
+
+            result = dict(status=task.state, current=task.info.get('current'),
+                          message=task.info.get('msg'))
+    
+        else:
+            result = dict(status='PENDING', current=0,
+                          message='starting importing proccess')
+
+        response['result'] = result
+        log(logger, response['uuid'], response)
+        return jsonify(response)
+
 
 
 @app.route('/acme_orders')
@@ -135,10 +123,8 @@ def init_page():
 @app.errorhandler(404)
 def not_found(error):
     """handler for not_found error"""
-
-    response = create_response_base(request.args.get('uuid')) 
-    log(logger, response['uuid'], 'starting request', params=request.args)
-
+    
+    response = create_base_response()
     response['status_code'] = 404
     response['message'] = 'endpoint not found'
     log(logger, response['uuid'], response, level='error')

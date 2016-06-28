@@ -17,7 +17,7 @@ os.environ['CELERY_BROKER_URL'] = 'amqp://guest:guest@142.4.215.94:5672//'
 from acme_orders import app, celery
 from acme_orders.config.general_config import Config         
 from acme_orders.models import get_session, init_engine, Order
-from acme_orders.service import import_cvs_orders
+from acme_orders.services import importer, order
 
 
 class manageTestCase(unittest.TestCase):  
@@ -67,16 +67,42 @@ class manageTestCase(unittest.TestCase):
         rv = self.app.get('/acme_orders/api/v1/orders?offset=ab')
         result = json.loads(rv.data)   
         
-        assert result['message'] == 'offset must be a number!'
-        assert result['status_code'] == 402
+        assert result['message']['offset'] == 'offset must be a number'
 
     
     def test_list_imported_orders_invalid_limit(self):
         rv = self.app.get('/acme_orders/api/v1/orders?limit=ab')
         result = json.loads(rv.data)   
         
-        assert result['message'] == 'limit must be a number! '
-        assert result['status_code'] == 402
+        assert result['message']['limit'] == 'limit must be a number'
+
+
+    def test_list_imported_orders_valid_filter(self):
+        rv = self.app.get('/acme_orders/api/v1/orders?valid=true')
+        orders = json.loads(rv.data)   
+        
+        assert len(orders['result']) == 2
+
+    
+    def test_list_imported_orders_state_filter(self):
+        rv = self.app.get('/acme_orders/api/v1/orders?state=NY')
+        orders = json.loads(rv.data)   
+        
+        assert len(orders['result']) == 3
+
+
+    def test_list_imported_orders_state_valid_filter(self):
+        rv = self.app.get('/acme_orders/api/v1/orders?state=NY&valid=false')
+        orders = json.loads(rv.data)   
+        
+        assert len(orders['result']) == 1
+
+
+    def test_list_imported_orders_limit_state_valid_filter(self):
+        rv = self.app.get('/acme_orders/api/v1/orders?state=NY&valid=true&limit=1')
+        orders = json.loads(rv.data)   
+        
+        assert len(orders['result']) == 1
 
 
     def test_get_order(self):
@@ -93,7 +119,7 @@ class manageTestCase(unittest.TestCase):
         ]
 
         celery.conf.update(CELERY_ALWAYS_EAGER=True,)
-        with patch('acme_orders.service.csv.reader') as reader_mock: 
+        with patch('acme_orders.services.importer.csv.reader') as reader_mock: 
             reader_mock.return_value = order_list
             rv = self.app.put('/acme_orders/api/v1/orders/import', 
                                data=dict(csv_file=(StringIO('testing'), 
@@ -113,7 +139,7 @@ class manageTestCase(unittest.TestCase):
 
     
     def test_get_status_success(self):
-        with patch('acme_orders.service.import_cvs_orders.AsyncResult') as result_mock:
+        with patch('acme_orders.services.importer.import_cvs_orders.AsyncResult') as result_mock:
             tmp_file = open('/tmp/acme_testing.csv', 'w')
             tmp_file.close()
 
@@ -126,13 +152,13 @@ class manageTestCase(unittest.TestCase):
             task = type("Task", (),  {'info': info, 'status': 'SUCCESS', 'state': 'SUCCESS'})
             result_mock.return_value = task
 
-            rv = self.app.get('/acme_orders/api/v1/orders/import/status?task_id=testing')
+            rv = self.app.get('/acme_orders/api/v1/orders/import/status/task_id=testing')
             task_status_result = json.loads(rv.data)['result']
             assert task_status_result['status'] == 'SUCCESS'
 
 
     def test_get_status_progress(self):
-        with patch('acme_orders.service.import_cvs_orders.AsyncResult') as result_mock:
+        with patch('acme_orders.services.importer.import_cvs_orders.AsyncResult') as result_mock:
             info = {
                 'current': '0',
                 'msg': 'waiting'
@@ -141,13 +167,13 @@ class manageTestCase(unittest.TestCase):
             task = type("Task", (),  {'info': info, 'status': 'PROGRESS', 'state': 'PROGRESS'})
             result_mock.return_value = task
 
-            rv = self.app.get('/acme_orders/api/v1/orders/import/status?task_id=testing')
+            rv = self.app.get('/acme_orders/api/v1/orders/import/status/task_id=testing')
             task_status_result = json.loads(rv.data)['result']
             assert task_status_result['status'] == 'PROGRESS'
 
 
     def test_get_status_pending(self):
-        with patch('acme_orders.service.import_cvs_orders.AsyncResult') as result_mock:
+        with patch('acme_orders.services.importer.import_cvs_orders.AsyncResult') as result_mock:
             info = {
                 'current': '0',
                 'msg': 'waiting'
@@ -156,7 +182,7 @@ class manageTestCase(unittest.TestCase):
             task = type("Task", (),  {'info': None})
             result_mock.return_value = task
 
-            rv = self.app.get('/acme_orders/api/v1/orders/import/status?task_id=testing')
+            rv = self.app.get('/acme_orders/api/v1/orders/import/status/task_id=testing')
             task_status_result = json.loads(rv.data)['result']
             assert task_status_result['status'] == 'PENDING'
     
@@ -183,7 +209,7 @@ class manageTestCase(unittest.TestCase):
         
         with app.test_request_context('/test'):
             csv_file_name = 'resources/test_orders.csv'
-            task = import_cvs_orders.apply_async(args=[csv_file_name, 'testing'])
+            task = importer.import_cvs_orders.apply_async(args=[csv_file_name, 'testing'])
             time.sleep(4)
             rv = self.app.get('/acme_orders/api/v1/orders')
             orders = json.loads(rv.data)['result']                
@@ -195,7 +221,7 @@ class manageTestCase(unittest.TestCase):
     def test_import_cvs_one_order(self):
         with app.test_request_context('/test'):
             csv_file_name = 'resources/one_record.csv'
-            task = import_cvs_orders.apply(args=[csv_file_name, 'testing'], throw=True)
+            task = importer.import_cvs_orders.apply(args=[csv_file_name, 'testing'], throw=True)
             rv = self.app.get('/acme_orders/api/v1/orders')
             orders = json.loads(rv.data)['result']                
                 
@@ -206,7 +232,7 @@ class manageTestCase(unittest.TestCase):
     def test_import_cvs_empty_file(self):
         with app.test_request_context('/test'):
             csv_file_name = 'resources/empty_file.csv'
-            task = import_cvs_orders.apply(args=[csv_file_name, 'testing'], throw=True)
+            task = importer.import_cvs_orders.apply(args=[csv_file_name, 'testing'], throw=True)
             rv = self.app.get('/acme_orders/api/v1/orders')
             orders = json.loads(rv.data)['result']                
                 
@@ -216,7 +242,7 @@ class manageTestCase(unittest.TestCase):
     def test_import_cvs_only_header(self):
         with app.test_request_context('/test'):
             csv_file_name = 'resources/only_header.csv'
-            task = import_cvs_orders.apply(args=[csv_file_name, 'testing'], throw=True)
+            task = importer.import_cvs_orders.apply(args=[csv_file_name, 'testing'], throw=True)
             rv = self.app.get('/acme_orders/api/v1/orders')
             orders = json.loads(rv.data)['result']                
                 

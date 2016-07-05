@@ -25,8 +25,13 @@ class Config(object):
     USERNAME = 'admin'
     PASSWORD = 'admin'
     
-    DEBUG = False
-    TESTING = False
+    DEBUG = True
+    TESTING = True
+
+    LANGUAGES = {
+        'en': 'English',
+        'pt': 'Portuguese'
+    }
 
     ALLOWED_AGE = 21
     INVALID_STATES = ['NJ', 'CT', 'PA', 'MS', 'IL', 'ID', 'OR']
@@ -55,20 +60,16 @@ class Config(object):
         type = type + 'Config'
 
         class ProductionConfig(Config):
-            DB_URI = 'postgres://acme_wine:acme_wine@142.4.215.94:5432/acme_orders' 
-
+            DB_URI = 'postgres://acme_wine:acme_wine@142.4.215.94:5432/acme_orders'
+            DEBUG = False
+            SQL_ALCHEMY_ECHO = False 
 
         class DevelopmentConfig(Config):
             DB_URI = 'postgres://acme_wine:acme_wine@142.4.215.94:5432/acme_orders'
-            DEBUG = True
-            SQL_ALCHEMY_ECHO = False
-            
 
 
         class TestingConfig(Config):
             DB_URI = 'postgres://acme_wine:acme_wine@142.4.215.94:5432/acme_orders_test'
-            DEBUG = True
-            TESTING = True
             SQL_ALCHEMY_ECHO = False
             
 

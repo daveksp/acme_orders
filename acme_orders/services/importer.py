@@ -17,6 +17,7 @@ import sys
 
 import celery
 from celery.contrib import rdb
+from flask.ext.babel import gettext
 from sqlalchemy.exc import IntegrityError
 
 from acme_orders.logger.log import create_logger, log
@@ -56,10 +57,8 @@ def read_orders(tmp_file_name):
 
 @celery.task(bind=True)
 def import_cvs_orders(self, tmp_file_name, uuid):
-    
     session = get_session()
     orders = read_orders(tmp_file_name)
-    message = 'importing csv file. {} orders imported'
     previous = None
     count = 0
      
@@ -73,14 +72,14 @@ def import_cvs_orders(self, tmp_file_name, uuid):
             count += 1
         except IntegrityError as e:
             session.rollback()
-            log(logger, uuid, 'id ja existente', params=str(order.id))
+            log(logger, uuid, gettext('existent_id_error_msg'), params=str(order.id))
         
         self.update_state(
             state='PROGRESS', 
             meta={
                 'current': count,
-                'msg': message.format(count)
+                'msg': gettext('import_progress_msg', count=count)
         })
     
-    message = 'csv file succesfully imported'
+    message = gettext('import_success_msg')
     return {'current': count, 'msg': message, 'file_name': tmp_file_name}

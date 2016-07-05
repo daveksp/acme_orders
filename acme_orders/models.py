@@ -6,8 +6,8 @@ import json
 import re
 
 from celery.signals import task_prerun
-
 from contextlib import closing
+from flask.ext.babel import gettext
 from sqlalchemy import create_engine, Column, Integer, String, Date, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -92,7 +92,7 @@ class Order(Base):
         if zipcode_sum > 20:
             return {
                 'rule': 'zipcode_sum',
-                'message': 'Your zipcode sum is too large'
+                'message': gettext('zipcode_sum_error_msg')
             }
         
         self.zipcode = handled_zipcode
@@ -104,7 +104,7 @@ class Order(Base):
         if length != 5 and length != 9:
             return {
                 'rule': 'zipcode_length',
-                'message': 'incorrect zipcode length'
+                'message': gettext('zipcode_length_error_msg')
             }
 
         self.zipcode = handled_zipcode
@@ -114,7 +114,7 @@ class Order(Base):
         if self.state.upper() in app.config['INVALID_STATES']:
             return {
                 'rule': 'allowed_state',
-                'message': "We don't ship to {}".format(self.state)
+                'message': gettext('allowed_state_error_msg', state=self.state)
             }
 
     
@@ -124,7 +124,7 @@ class Order(Base):
         if not pattern.match(self.email):
             return {
                 'rule': 'email_pattern',
-                'message': 'incorrect email pattern'
+                'message': gettext('email_pattern_error_msg')
             }
     
 
@@ -132,7 +132,7 @@ class Order(Base):
         if self.state.upper() == 'NY' and self.email[-4:].lower() == '.net':
             return {
                 'rule': 'email_state',
-                'message': "users from NY can't have .net email address"
+                'message': gettext('email_state_error_msg')
             }         
     
 
@@ -145,7 +145,7 @@ class Order(Base):
         if age < app.config['ALLOWED_AGE']:
             return {
                 'rule': 'allowed_age',
-                'message': "you must be at least 21 years old for ordering alcohoolic drinks"
+                'message': gettext('allowed_age_error_msg')
             } 
 
 

@@ -1,0 +1,76 @@
+# English translations for Acme.
+# Copyright (C) 2016 ORGANIZATION
+# This file is distributed under the same license as the Acme project.
+# FIRST AUTHOR daveksp@gmail.com, 2016.
+#
+#, 
+msgid ""
+msgstr ""
+"Project-Id-Version: Acme Orders\n"
+"Report-Msgid-Bugs-To: daveksp@gmail.com\n"
+"POT-Creation-Date: 2016-06-28 15:37-0300\n"
+"PO-Revision-Date: 2016-06-29 00:36-0400\n"
+"Last-Translator: David Pinheiro <daveksp@gmail.com>\n"
+"Language-Team: en <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.0\n"
+
+# models
+msgid "zipcode_sum_error_msg"
+msgstr "Your zipcode sum is too large"
+
+msgid "zipcode_length_error_msg"
+msgstr "incorrect zipcode length"
+
+msgid "allowed_state_error_msg"
+msgstr "We don't ship to %(state)s"
+
+msgid "email_pattern_error_msg"
+msgstr "incorrect email pattern"
+
+msgid "email_state_error_msg"
+msgstr "users from NY can't have .net email address"
+
+msgid "allowed_age_error_msg"
+msgstr "you must be at least 21 years old for ordering alcohoolic drinks"
+
+# importer service
+msgid "import_progress_msg"
+msgstr "importing csv file. %(count)s orders imported"
+
+msgid "existent_id_error_msg"
+msgstr "already existent id"
+
+msgid "import_success_msg"
+msgstr "csv file succesfully imported"
+
+# views
+msgid "limit_help_msg"
+msgstr "limit must be a number"
+
+msgid "offset_help_msg"
+msgstr "offset must be a number"
+
+msgid "orderid_help_msg"
+msgstr "order_id must be a number"
+
+msgid "valid_help_msg"
+msgstr "valid must be a bool value"
+
+msgid "state_help_msg"
+msgstr "state must be a string"
+
+msgid "csv_file_help_msg"
+msgstr "a csv file is required'"
+
+msgid "import_starting_msg"
+msgstr "starting importing proccess"
+
+msgid "endpoint_not_found_error_msg"
+msgstr "endpoint not found"
+
+msgid "file_extension_not_allowed_msg"
+msgstr "only '.csv' files are allowed for upload."

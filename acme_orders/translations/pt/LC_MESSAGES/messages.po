@@ -1,0 +1,76 @@
+# Portuguese translations for Acme.
+# Copyright (C) 2016 ORGANIZATION
+# This file is distributed under the same license as the Acme project.
+# FIRST AUTHOR daveksp@gmail.com, 2016.
+#
+#, 
+msgid ""
+msgstr ""
+"Project-Id-Version: Acme Orders\n"
+"Report-Msgid-Bugs-To: daveksp@gmail.com\n"
+"POT-Creation-Date: 2016-06-28 15:37-0300\n"
+"PO-Revision-Date: 2016-06-29 00:35-0400\n"
+"Last-Translator: David Pinheiro <daveksp@gmail.com>\n"
+"Language-Team: pt <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.0\n"
+
+# models
+msgid "zipcode_sum_error_msg"
+msgstr "A soma dos digitos de seu cep é maior que o permitido"
+
+msgid "zipcode_length_error_msg"
+msgstr "Tamanho de cep invalido"
+
+msgid "allowed_state_error_msg"
+msgstr "Nos nao enviamos para %(state)s"
+
+msgid "email_pattern_error_msg"
+msgstr "Padrao de email incorreto"
+
+msgid "email_state_error_msg"
+msgstr "Usuarios de NY nao podem ter um email com final .net"
+
+msgid "allowed_age_error_msg"
+msgstr "Usuarios devem ser maiores de 21 anos para comprar bebidas alcolicas"
+
+# importer service
+msgid "import_progress_msg"
+msgstr "Importando arquivo csv. %(count)s pedidos importados"
+
+msgid "existent_id_error_msg"
+msgstr "id ja existente"
+
+msgid "import_success_msg"
+msgstr "arquivo csv importado com sucesso"
+
+# views
+msgid "limit_help_msg"
+msgstr "limit precisa ser um numero"
+
+msgid "offset_help_msg"
+msgstr "offset precisa ser um numero"
+
+msgid "orderid_help_msg"
+msgstr "order_id precisa ser um numero"
+
+msgid "valid_help_msg"
+msgstr "valid precisa ser um valor boleano"
+
+msgid "state_help_msg"
+msgstr "state precisa ser uma string"
+
+msgid "csv_file_help_msg"
+msgstr "um arquivo csv e necessario"
+
+msgid "import_starting_msg"
+msgstr "iniciando processo de importacao"
+
+msgid "endpoint_not_found_error_msg"
+msgstr "endpoint nao encontrado"
+
+msgid "file_extension_not_allowed_msg"
+msgstr "Apenas arquivos '.csv' sao permitidos para upload."

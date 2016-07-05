@@ -14,7 +14,7 @@ def get_order_list(limit=None, offset=None, filters=None):
     applied_filters = []
     
     for k, v in filters.iteritems():
-        if k == 'state':
+        if isinstance(v, basestring):
             query_stmt = eval('Order.{}'.format(k))
             applied_filters.append(query_stmt.like('%{}%'.format(v)))
         else:

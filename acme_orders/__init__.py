@@ -2,12 +2,14 @@ import os
 
 from celery import Celery
 from flask import Flask, request
+from flask.ext.babel import Babel
 from flask.ext.restful import Api
 from flask_cors import CORS
 
 from config.general_config import Config
 
 app = Flask(__name__, static_url_path='/templates/static/')
+babel = Babel(app)
 api = Api(app)
 
 celery = Celery(
@@ -39,3 +41,8 @@ api.add_resource(ImporterAPI, '/acme_orders/api/v1/orders/import/status/<task_id
 
 # CONFIG CROSS ORIGIN REQUEST SHARING 
 CORS(app, resources=r'/*', allow_headers='Content-Type', supports_credentials=True)
+
+
+@babel.localeselector
+def get_locale():
+    return request.accept_languages.best_match(app.config['LANGUAGES'].keys())

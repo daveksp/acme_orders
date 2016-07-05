@@ -8,12 +8,14 @@ import sys
 import time
 import unittest
 
+from flask.ext.babel import gettext
 from mock import patch, MagicMock
 from werkzeug.datastructures import FileStorage
 
 os.environ['CELERY_RESULT_BACKEND'] = 'amqp://guest:guest@142.4.215.94:5672//'
 os.environ['CELERY_BROKER_URL'] = 'amqp://guest:guest@142.4.215.94:5672//'
 
+import acme_orders
 from acme_orders import app, celery
 from acme_orders.config.general_config import Config         
 from acme_orders.models import get_session, init_engine, Order
@@ -64,17 +66,19 @@ class manageTestCase(unittest.TestCase):
 
 
     def test_list_imported_orders_invalid_offset(self):
-        rv = self.app.get('/acme_orders/api/v1/orders?offset=ab')
-        result = json.loads(rv.data)   
+        with acme_orders.app.test_request_context('/test'):
+            rv = self.app.get('/acme_orders/api/v1/orders?offset=ab')
+            result = json.loads(rv.data)   
         
-        assert result['message']['offset'] == 'offset must be a number'
+            assert result['message']['offset'] == gettext('offset_help_msg')
 
     
     def test_list_imported_orders_invalid_limit(self):
-        rv = self.app.get('/acme_orders/api/v1/orders?limit=ab')
-        result = json.loads(rv.data)   
+        with acme_orders.app.test_request_context('/test'):
+            rv = self.app.get('/acme_orders/api/v1/orders?limit=ab')
+            result = json.loads(rv.data)   
         
-        assert result['message']['limit'] == 'limit must be a number'
+            assert result['message']['limit'] == gettext('limit_help_msg')
 
 
     def test_list_imported_orders_valid_filter(self):
@@ -105,10 +109,34 @@ class manageTestCase(unittest.TestCase):
         assert len(orders['result']) == 1
 
 
+    def test_list_imported_orders_error_valid_filter(self):
+        with acme_orders.app.test_request_context('/test'):
+            rv = self.app.get('/acme_orders/api/v1/orders?valid=beans')
+            result = json.loads(rv.data)   
+        
+            assert result['message']['valid'] == gettext('valid_help_msg')
+      
+
+    def test_list_imported_orders_error_state_filter(self):
+        with acme_orders.app.test_request_context('/test'):
+            rv = self.app.get('/acme_orders/api/v1/orders?state=45')
+            result = json.loads(rv.data)   
+        
+            assert result['message']['state'] == gettext('state_help_msg')
+
+
     def test_get_order(self):
         rv = self.app.get('/acme_orders/api/v1/orders/1')
         orders = json.loads(rv.data)   
         assert orders['result']['id'] == 1 
+
+
+    def test_get_order_invalid_id_type(self):
+        with acme_orders.app.test_request_context('/test'):
+            rv = self.app.get('/acme_orders/api/v1/orders/ab')
+            result = json.loads(rv.data)   
+            
+            assert result['message'] == gettext('endpoint_not_found_error_msg')
 
 
     def test_upload_csv(self):
@@ -119,23 +147,44 @@ class manageTestCase(unittest.TestCase):
         ]
 
         celery.conf.update(CELERY_ALWAYS_EAGER=True,)
-        with patch('acme_orders.services.importer.csv.reader') as reader_mock: 
-            reader_mock.return_value = order_list
-            rv = self.app.put('/acme_orders/api/v1/orders/import', 
-                               data=dict(csv_file=(StringIO('testing'), 
-                                  'orders.csv')
-            ))
+        with patch('acme_orders.services.importer.csv.reader') as reader_mock:
+            with app.test_request_context('/test'):
+                reader_mock.return_value = order_list
+                rv = self.app.put('/acme_orders/api/v1/orders/import', 
+                            data=dict(csv_file=(StringIO('testing'), 
+                            'orders.csv')
+                ))
 
-            time.sleep(4)
+                time.sleep(4)
+                result = json.loads(rv.data)
+                os.remove('/tmp/{}.csv'.format(result['uuid']))
+                assert result['message'] == gettext('import_starting_msg')
+
+                rv = self.app.get('/acme_orders/api/v1/orders')
+                orders = json.loads(rv.data)['result']
+                assert len(orders) == 8
+                self.inserted_orders.append(8)
+                assert orders[7]['name'] == 'Toddy Pinheiro'
+
+
+    def test_upload_csv_no_file(self):
+        with app.test_request_context('/test'):
+            rv = self.app.put('/acme_orders/api/v1/orders/import')
+
             result = json.loads(rv.data)
-            os.remove('/tmp/{}.csv'.format(result['uuid']))
-            assert result['message'] == 'starting importing proccess'
+            assert result['message']['csv_file'] == gettext('csv_file_help_msg')
 
-            rv = self.app.get('/acme_orders/api/v1/orders')
-            orders = json.loads(rv.data)['result']
-            assert len(orders) == 8
-            self.inserted_orders.append(8)
-            assert orders[7]['name'] == 'Toddy Pinheiro'
+    
+    def test_upload_csv_invalid_extension(self):
+        with app.test_request_context('/test'):
+            rv = self.app.put('/acme_orders/api/v1/orders/import', 
+                            data=dict(csv_file=(StringIO('testing'), 
+                            'report.pdf')
+                ))
+
+            result = json.loads(rv.data)
+            assert result['message'] == gettext('file_extension_not_allowed_msg')
+            assert result['status_code'] == 402
 
     
     def test_get_status_success(self):
@@ -187,6 +236,13 @@ class manageTestCase(unittest.TestCase):
             assert task_status_result['status'] == 'PENDING'
     
 
+    def test_get_status_no_task_id(self):
+        with app.test_request_context('/test'):
+            rv = self.app.get('/acme_orders/api/v1/orders/import/status/')
+            result = json.loads(rv.data)
+            assert result['message'] == gettext('endpoint_not_found_error_msg')
+
+
     #  Tests for template
     def test_index(self):
         """@todo use selenium for tests in frontend"""
@@ -197,10 +253,12 @@ class manageTestCase(unittest.TestCase):
     
     # Tests for error handler
     def test_not_found_handler(self):
-        rv = self.app.get('/acme_orders/api/v2/pipocas')
-        tags = json.loads(rv.data)
-        assert tags['message'] == 'endpoint not found'
-        assert tags['status_code'] == 404
+        with acme_orders.app.test_request_context('/test'):
+            rv = self.app.get('/acme_orders/api/v2/pipocas')
+            tags = json.loads(rv.data)
+
+            assert tags['message'] == gettext('endpoint_not_found_error_msg')
+            assert tags['status_code'] == 404
 
     
     #  Tests for service 
@@ -264,7 +322,7 @@ class manageTestCase(unittest.TestCase):
         order.validate()
         
         assert order.errors[0]['rule'] == 'zipcode_sum'
-        assert order.errors[0]['message'] == 'Your zipcode sum is too large'
+        assert order.errors[0]['message'] == gettext('zipcode_sum_error_msg')
 
 
     def test_validate_zipcode_length_success(self):
@@ -284,7 +342,7 @@ class manageTestCase(unittest.TestCase):
         order.validate()
         
         assert order.errors[0]['rule'] == 'zipcode_length'
-        assert order.errors[0]['message'] == 'incorrect zipcode length'
+        assert order.errors[0]['message'] == gettext('zipcode_length_error_msg')
 
 
     def test_validate_allowed_state_success(self):
@@ -301,7 +359,7 @@ class manageTestCase(unittest.TestCase):
         order.validate()
         
         assert order.errors[0]['rule'] == 'allowed_state'
-        assert order.errors[0]['message'] == "We don't ship to NJ"
+        assert order.errors[0]['message'] == gettext('allowed_state_error_msg', state='NJ')
 
 
     def test_validate_config_allowed_state(self):
@@ -315,7 +373,7 @@ class manageTestCase(unittest.TestCase):
         order_ct.validate()
 
         assert order_ny.errors[0]['rule'] == 'allowed_state'
-        assert order_ny.errors[0]['message'] == "We don't ship to NY"
+        assert order_ny.errors[0]['message'] == gettext('allowed_state_error_msg', state='NJ')
 
         assert not order_nj.errors
         assert not order_ct.errors
@@ -339,10 +397,10 @@ class manageTestCase(unittest.TestCase):
         order2.validate()
         
         assert order.errors[0]['rule'] == 'email_pattern'
-        assert order.errors[0]['message'] == "incorrect email pattern"
+        assert order.errors[0]['message'] == gettext('email_pattern_error_msg')
 
         assert order2.errors[0]['rule'] == 'email_pattern'
-        assert order2.errors[0]['message'] == "incorrect email pattern"
+        assert order2.errors[0]['message'] == gettext('email_pattern_error_msg')
 
 
     def test_validate_email_state_success(self):
@@ -359,7 +417,7 @@ class manageTestCase(unittest.TestCase):
         order.validate()
         
         assert order.errors[0]['rule'] == 'email_state'
-        assert order.errors[0]['message'] == "users from NY can't have .net email address"
+        assert order.errors[0]['message'] == gettext('email_state_error_msg')
 
 
     def test_validate_allowed_age_success(self):
@@ -376,7 +434,7 @@ class manageTestCase(unittest.TestCase):
         order.validate()
         
         assert order.errors[0]['rule'] == 'allowed_age'
-        assert order.errors[0]['message'] == "you must be at least 21 years old for ordering alcohoolic drinks"
+        assert order.errors[0]['message'] == gettext('allowed_age_error_msg')
 
     # Tests for config class
     def test_config_wrong_type(self):

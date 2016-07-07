@@ -13,11 +13,11 @@ from logging import StreamHandler
 from logging.handlers import RotatingFileHandler
 import inspect
 
-from acme_orders.config.general_config import Config
+from acme_orders import app
 
 
-if not os.path.exists(Config.LOG_LOCATION):
-    os.makedirs(Config.LOG_LOCATION)
+if not os.path.exists(app.config['LOG_LOCATION']):
+    os.makedirs(app.config['LOG_LOCATION'])
 
 formatter = logging.Formatter(
     '%(asctime)s - %(levelname)s - %(name)s.%(funcName)s - PID:%(process)d - TID:%(thread)d - %(message)s')
@@ -38,7 +38,7 @@ def create_logger(class_name):
     if not has_stream_handler:
         handlers.append(StreamHandler())
     if not has_file_handler:
-        location = Config.LOG_LOCATION + Config.LOG_NAME
+        location = app.config['LOG_LOCATION'] + app.config['LOG_NAME']
         handlers.append(RotatingFileHandler(location, maxBytes=10000000, backupCount=10))
 
     for handler in handlers:

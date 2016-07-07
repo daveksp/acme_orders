@@ -6,7 +6,7 @@ python:
 install: "pip install -r resources/requirements.txt"
 # command to run tests
 script: 
- - sudo coverage run --source acme_orders tests.py
+ - coverage run --source acme_orders tests.py
  - coverage report
 after_success:
   - coveralls

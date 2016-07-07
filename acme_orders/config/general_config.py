@@ -14,7 +14,6 @@ Module responsible for provinding configuration details according to
 especific Enviroment Types such as Production, Testing and Development.     
 """
 
-
 class Config(object):
     DB_MIGRATE = True
     DB_URI = ''        
@@ -76,7 +75,7 @@ class Config(object):
         class TestingConfig(Config):
             DB_URI = 'postgres://acme_wine:acme_wine@142.4.215.94:5432/acme_orders_test'
             SQL_ALCHEMY_ECHO = False
-            
+            LOG_LOCATION = 'log/'
 
         subclasses = Config.__subclasses__()
         types = [subclass.__name__ for subclass in subclasses]

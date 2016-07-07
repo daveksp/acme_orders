@@ -11,22 +11,25 @@ Created on 06/17/2016
         - TestingConfig
 
 Module responsible for provinding configuration details according to
-especific Enviroment Types such as Production, Testing and Development.     
+especific Enviroment Types such as Production, Testing and Development.
 """
 
 
 class Config(object):
     DB_MIGRATE = True
-    DB_URI = ''        
+    DB_URI = ''
     SQL_ALCHEMY_ECHO = False
     ALLOWED_EXTENSIONS = set(['csv'])
 
-    SECRET_KEY = '\xae\xdc\xa0\xb6\xbf\x843\xe5EELd\x99\x07Tt\x92\x16\xa5\xddj\xf0@\xe8' 
+    SECRET_KEY = '\xae\xdc\xa0\xb6\xbf\x843\xe5EELd\x99\x07Tt\x92\x16\xa5\xddj\xf0@\xe8'
     USERNAME = 'admin'
     PASSWORD = 'admin'
-    
+
     DEBUG = True
     TESTING = True
+
+    LOG_NAME = 'acme_orders.log'
+    LOG_LOCATION = '/var/log/acme/'
 
     LANGUAGES = {
         'en': 'English',
@@ -49,12 +52,12 @@ class Config(object):
         """Factory method for handling Config's subclasses creation
 
         Classes are wrapped inside method for preventing them to be
-        directly instanciated. Re-assign desired variables that 
+        directly instanciated. Re-assign desired variables that
         should assume different values inside each subclass.
 
-        @param type: subclass name 
+        @param type: subclass name
 
-        @raise TypeError: When provinding a non existent subclass name 
+        @raise TypeError: When provinding a non existent subclass name
         """
 
         type = type + 'Config'
@@ -64,14 +67,14 @@ class Config(object):
             DEBUG = False
             SQL_ALCHEMY_ECHO = False 
 
+
         class DevelopmentConfig(Config):
             DB_URI = 'postgres://acme_wine:acme_wine@142.4.215.94:5432/acme_orders'
-
 
         class TestingConfig(Config):
             DB_URI = 'postgres://acme_wine:acme_wine@142.4.215.94:5432/acme_orders_test'
             SQL_ALCHEMY_ECHO = False
-            
+            LOG_LOCATION = 'log/'
 
         subclasses = Config.__subclasses__()
         types = [subclass.__name__ for subclass in subclasses]

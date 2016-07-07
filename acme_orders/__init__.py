@@ -27,20 +27,25 @@ except KeyError as ex:
 config = Config.factory(enviroment)
 app.config.from_object(config)
 
+
 from acme_orders.models import init_engine
 init_engine(app.config['DB_URI'], echo=app.config['SQL_ALCHEMY_ECHO'])
-
-#import acme_orders.views
 from acme_orders.views import ImporterAPI, OrderAPI
 
+
 api.add_resource(OrderAPI, '/acme_orders/api/v1/orders', endpoint='orders')
-api.add_resource(OrderAPI, '/acme_orders/api/v1/orders/<int:order_id>', endpoint='order')
+api.add_resource(OrderAPI, '/acme_orders/api/v1/orders/<int:order_id>',
+                 endpoint='order')
 
-api.add_resource(ImporterAPI, '/acme_orders/api/v1/orders/import', endpoint='importer')
-api.add_resource(ImporterAPI, '/acme_orders/api/v1/orders/import/status/<task_id>', endpoint='importer_status')
+api.add_resource(ImporterAPI, '/acme_orders/api/v1/orders/import',
+                 endpoint='importer')
+api.add_resource(ImporterAPI, '/acme_orders/api/v1/orders/import/status/<task_id>',
+                 endpoint='importer_status')
 
-# CONFIG CROSS ORIGIN REQUEST SHARING 
-CORS(app, resources=r'/*', allow_headers='Content-Type', supports_credentials=True)
+
+# CONFIG CROSS ORIGIN REQUEST SHARING
+CORS(app, resources=r'/*', allow_headers='Content-Type',
+     supports_credentials=True)
 
 
 @babel.localeselector

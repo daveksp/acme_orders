@@ -1,6 +1,5 @@
 __author__ = 'david'
 
-import functools
 import uuid
 
 from flask import request
@@ -16,13 +15,13 @@ def create_base_response():
 
     if uuid_value is None:
         uuid_value = uuid.uuid4()
-    
+
     response = dict(result=[], status_code=200, uuid=uuid_value, message='')
     log(logger, response['uuid'], 'starting request', params=request.args)
 
     return response
-    
+
 
 def is_allowed_file(filename):
-    return ('.' in filename 
-    	   and filename.rsplit('.', 1)[1] in app.config['ALLOWED_EXTENSIONS'])
+    return ('.' in filename
+            and filename.rsplit('.', 1)[1] in app.config['ALLOWED_EXTENSIONS'])

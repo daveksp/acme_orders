@@ -11,19 +11,20 @@ Created on 06/17/2016
         - TestingConfig
 
 Module responsible for provinding configuration details according to
-especific Enviroment Types such as Production, Testing and Development.     
+especific Enviroment Types such as Production, Testing and Development.
 """
+
 
 class Config(object):
     DB_MIGRATE = True
-    DB_URI = ''        
+    DB_URI = ''
     SQL_ALCHEMY_ECHO = False
     ALLOWED_EXTENSIONS = set(['csv'])
 
-    SECRET_KEY = '\xae\xdc\xa0\xb6\xbf\x843\xe5EELd\x99\x07Tt\x92\x16\xa5\xddj\xf0@\xe8' 
+    SECRET_KEY = '\xae\xdc\xa0\xb6\xbf\x843\xe5EELd\x99\x07Tt\x92\x16\xa5\xddj\xf0@\xe8'
     USERNAME = 'admin'
     PASSWORD = 'admin'
-    
+
     DEBUG = True
     TESTING = True
 
@@ -34,7 +35,6 @@ class Config(object):
         'en': 'English',
         'pt': 'Portuguese'
     }
-
 
     ALLOWED_AGE = 21
     INVALID_STATES = ['NJ', 'CT', 'PA', 'MS', 'IL', 'ID', 'OR']
@@ -47,18 +47,17 @@ class Config(object):
         {'rule': 'allowed_age', 'activated': True}
     ]
 
-
     @staticmethod
     def factory(type):
         """Factory method for handling Config's subclasses creation
 
         Classes are wrapped inside method for preventing them to be
-        directly instanciated. Re-assign desired variables that 
+        directly instanciated. Re-assign desired variables that
         should assume different values inside each subclass.
 
-        @param type: subclass name 
+        @param type: subclass name
 
-        @raise TypeError: When provinding a non existent subclass name 
+        @raise TypeError: When provinding a non existent subclass name
         """
 
         type = type + 'Config'
@@ -67,7 +66,7 @@ class Config(object):
             DB_URI = 'postgres://acme_wine:acme_wine@142.4.215.94:5432/acme_orders'
             DEBUG = False
             SQL_ALCHEMY_ECHO = False 
-            
+
 
         class DevelopmentConfig(Config):
             DB_URI = 'postgres://acme_wine:acme_wine@142.4.215.94:5432/acme_orders'

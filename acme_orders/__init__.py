@@ -1,5 +1,4 @@
 import os
-import uuid
 
 from celery import Celery
 from flask import Flask, request
@@ -35,14 +34,18 @@ from acme_orders.views import ImporterAPI, OrderAPI
 
 
 api.add_resource(OrderAPI, '/acme_orders/api/v1/orders', endpoint='orders')
-api.add_resource(OrderAPI, '/acme_orders/api/v1/orders/<int:order_id>', endpoint='order')
+api.add_resource(OrderAPI, '/acme_orders/api/v1/orders/<int:order_id>',
+                 endpoint='order')
 
-api.add_resource(ImporterAPI, '/acme_orders/api/v1/orders/import', endpoint='importer')
-api.add_resource(ImporterAPI, '/acme_orders/api/v1/orders/import/status/<task_id>', endpoint='importer_status')
+api.add_resource(ImporterAPI, '/acme_orders/api/v1/orders/import',
+                 endpoint='importer')
+api.add_resource(ImporterAPI, '/acme_orders/api/v1/orders/import/status/<task_id>',
+                 endpoint='importer_status')
 
 
-# CONFIG CROSS ORIGIN REQUEST SHARING 
-CORS(app, resources=r'/*', allow_headers='Content-Type', supports_credentials=True)
+# CONFIG CROSS ORIGIN REQUEST SHARING
+CORS(app, resources=r'/*', allow_headers='Content-Type',
+     supports_credentials=True)
 
 
 @babel.localeselector

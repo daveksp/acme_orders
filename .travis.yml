@@ -1,11 +1,12 @@
 language: python
+sudo: required
 python:
   - "2.7"
 # command to install dependencies
 install: "pip install -r resources/requirements.txt"
 # command to run tests
 script: 
- - coverage run --source acme_orders tests.py
+ - sudo coverage run --source acme_orders tests.py
  - coverage report
 after_success:
   - coveralls

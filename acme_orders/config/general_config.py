@@ -28,10 +28,14 @@ class Config(object):
     DEBUG = True
     TESTING = True
 
+    LOG_NAME = 'acme_orders.log'
+    LOG_LOCATION = '/var/log/acme/'
+
     LANGUAGES = {
         'en': 'English',
         'pt': 'Portuguese'
     }
+
 
     ALLOWED_AGE = 21
     INVALID_STATES = ['NJ', 'CT', 'PA', 'MS', 'IL', 'ID', 'OR']
@@ -43,6 +47,7 @@ class Config(object):
         {'rule': 'email_state', 'activated': True},
         {'rule': 'allowed_age', 'activated': True}
     ]
+
 
     @staticmethod
     def factory(type):
@@ -63,10 +68,10 @@ class Config(object):
             DB_URI = 'postgres://acme_wine:acme_wine@142.4.215.94:5432/acme_orders'
             DEBUG = False
             SQL_ALCHEMY_ECHO = False 
+            
 
         class DevelopmentConfig(Config):
             DB_URI = 'postgres://acme_wine:acme_wine@142.4.215.94:5432/acme_orders'
-
 
         class TestingConfig(Config):
             DB_URI = 'postgres://acme_wine:acme_wine@142.4.215.94:5432/acme_orders_test'

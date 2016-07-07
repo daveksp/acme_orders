@@ -25,6 +25,7 @@ from acme_orders.models import get_session, Order
 
 logger = create_logger(__name__)
 
+
 def read_orders(tmp_file_name):
     with open(tmp_file_name, 'rb') as csv_file:
         reader = csv.reader(csv_file)

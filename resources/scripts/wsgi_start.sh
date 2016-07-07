@@ -1,7 +1,5 @@
 #!/bin/sh
 
-exec 1>> ./logs/output.log
-
 ps ax | grep -E "(celery)" | grep -v 'grep' | awk '{print $1}' | xargs kill -9
 ps ax | grep -E "(acme_orders)" | grep -v 'grep' | awk '{print $1}' | xargs kill -9
 sleep 1
@@ -15,4 +13,4 @@ export ACME_ENV=$2
 
 celery worker -A acme_orders.celery --loglevel=info &
 
-uwsgi --http $IP:8089 --wsgi-file runserver.py --callable app --processes 4 --threads 2 --master --lazy --lazy-apps 2>&1
+uwsgi --http $IP:8089 --wsgi-file runserver.py --callable app --processes 4 --threads 2 --master --lazy --lazy-apps 

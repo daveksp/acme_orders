@@ -2,3 +2,4 @@
 - hosts: all
   tasks:
     - shell: cd /opt/app/ && git clone https://github.com/daveksp/acme_orders.git
+    - shell: chdir=/opt/app/ acme_orders/resources/scripts/builder.sh

@@ -49,7 +49,8 @@ CORS(app, resources=r'/*', allow_headers='Content-Type',
      supports_credentials=True)
 
 # Starts New relic Agent
-agent.initialize(app.config['NEW_RELIC_INI_PATH'], 'production')  
+if enviroment != 'Testing':
+    agent.initialize(app.config['NEW_RELIC_INI_PATH'], 'production')
 
 @babel.localeselector
 def get_locale():

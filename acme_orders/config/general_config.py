@@ -24,6 +24,7 @@ class Config(object):
     SECRET_KEY = '\xae\xdc\xa0\xb6\xbf\x843\xe5EELd\x99\x07Tt\x92\x16\xa5\xddj\xf0@\xe8'
     USERNAME = 'admin'
     PASSWORD = 'admin'
+    NEW_RELIC_INI_PATH = 'resources/newrelic.ini'
 
     DEBUG = True
     TESTING = True

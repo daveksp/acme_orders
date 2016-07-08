@@ -2,9 +2,10 @@ import os
 
 from celery import Celery
 from flask import Flask, request
+from flask_cors import CORS
 from flask.ext.babel import Babel
 from flask.ext.restful import Api
-from flask_cors import CORS
+from newrelic import agent
 
 from config.general_config import Config
 
@@ -47,6 +48,8 @@ api.add_resource(ImporterAPI, '/acme_orders/api/v1/orders/import/status/<task_id
 CORS(app, resources=r'/*', allow_headers='Content-Type',
      supports_credentials=True)
 
+# Starts New relic Agent
+agent.initialize(app.config['NEW_RELIC_INI_PATH'], 'production')  
 
 @babel.localeselector
 def get_locale():

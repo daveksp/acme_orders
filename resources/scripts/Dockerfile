@@ -3,9 +3,8 @@ FROM python:2.7
 RUN mkdir -p /opt/app/
 
 WORKDIR /opt/app
-COPY acme_order /opt/app/
-RUN touch /opt/app/logs/output.log
-
+COPY acme_orders/ /opt/app/
+RUN ls /opt/app
 RUN pip install -r resources/requirements.txt
 
 EXPOSE 8089

@@ -1,5 +1,4 @@
 ---
 - hosts: all
   tasks:
-    - shell: cd /opt/app/
-    - shell: git clone https://github.com/daveksp/acme_orders.git
+    - shell: cd /opt/app/ && git clone https://github.com/daveksp/acme_orders.git
